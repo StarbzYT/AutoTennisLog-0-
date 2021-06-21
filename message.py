@@ -3,6 +3,7 @@ from twilio.rest import Client
 from auth import *
 from twilio.twiml.messaging_response import MessagingResponse
 from flask import Flask, request, redirect
+from openpyxl import Workbook, load_workbook
 
 class Messages:
     def __init__(self, account_sid, auth_token):
@@ -10,41 +11,42 @@ class Messages:
         self.account_sid = account_sid
         self.auth_token = auth_token
     
-    def message_history(self):
+    # get message history using twilio
+    def _message_history(self):
         client = Client(self.account_sid, self.auth_token)
+        # do not include this message
+        clear = "Sent from your Twilio trial account - Thanks for the message. Configure your number's SMS URL to change this message.Reply HELP for help.Reply STOP to unsubscribe.Msg&Data rates may apply."
         # message history
         messages = client.messages.list(limit=2)
         history = [message.body for message in messages]
         return history
 
-message_history = Messages(account_sid, auth_token)
-print(message_history.message_history())
+    # format text message for spreadsheet
+    def format_text(self):
+        message_history = Messages(account_sid, auth_token)._message_history()
+        text_message = message_history[-1]  # last index is personal text
+        text = text_message
+        result = text.split(",")
+        opponent = result[0]
+        # if the game goes over two sets
+        if len(result) > 4:
+            score = result[1:4][0]
+        # else if the game only went for two sets
+        else:
+            score = result[1:3][0]
+        winner = result[-1]
+        return [opponent, score, winner]
 
-# app = Flask(__name__)
+     def insert_data(self):
+        work_book = load_workbook(filename = "singles_tournament_2021.xlsx")
+        # grab the active worksheet
+        ws = work_book.active
+        # get max rows
+        max_rows = ws.max_row
+        # insert opponent
+        ws.cell(row=max_rows+1, column=1).value = "Djokovic"
+        # Save the file
+        work_book.save("singles_tournament_2021.xlsx")  # will create the file if not already created
 
-# @app.route("/sms", methods=['GET', 'POST'])
-# def sms_reply():
-#     """Respond to incoming calls with a simple text message."""
-#     # Start our TwiML response
-#     resp = MessagingResponse()
-
-#     # Add a message
-#     resp.message("The Robots are coming! Head for the hills!")
-
-#     return str(resp)
-
-# if __name__ == "__main__":
-#     app.run(debug=True)
-
-# # Find your Account SID and Auth Token at twilio.com/console
-# account_sid = account_sid
-# auth_token = auth_token
-# client = Client(account_sid, auth_token)
-
-# message = client.messages.create(
-#                               body='Hi there',
-#                               from_=trial_number,
-#                               to=to_phone
-#                           )
-
-# print(message.sid)
+insert = Messages(account_sid, auth_token)
+insert.insert_data()
