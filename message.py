@@ -37,14 +37,19 @@ class Messages:
         winner = result[-1]
         return [opponent, score, winner]
 
-     def insert_data(self):
+    def insert_data(self):
+        data = Messages(account_sid, auth_token).format_text()
         work_book = load_workbook(filename = "singles_tournament_2021.xlsx")
         # grab the active worksheet
         ws = work_book.active
         # get max rows
         max_rows = ws.max_row
         # insert opponent
-        ws.cell(row=max_rows+1, column=1).value = "Djokovic"
+        ws.cell(row=max_rows+1, column=1).value = data[0]
+        # insert score
+        ws.cell(row=max_rows+1, column=2).value = data[1]
+        # insert winner
+        ws.cell(row=max_rows+1, column=3).value = data[2]
         # Save the file
         work_book.save("singles_tournament_2021.xlsx")  # will create the file if not already created
 
