@@ -2,8 +2,7 @@
 from twilio.rest import Client
 from auth import *
 from twilio.twiml.messaging_response import MessagingResponse
-from flask import Flask, request, redirect
-from openpyxl import Workbook, load_workbook
+from openpyxl import load_workbook
 
 class Messages:
     def __init__(self, account_sid, auth_token):
